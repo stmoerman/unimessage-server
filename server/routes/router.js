@@ -63,7 +63,7 @@ router.post('/register', function (req, res, next) {
 
 // POST Router for login using username and password
 router.post('/login', function (req, res, next) {
-    if (req.body.email && req.body.password) {
+    if (req.body.email && req.body.password && req.body.ip && req.body.port) {
         User.authenticate(req.body.email, req.body.password, req.body.ip, req.body.port, function (error, user) {
           if (error || !user) {
             let response = {
@@ -80,6 +80,13 @@ router.post('/login', function (req, res, next) {
             return res.send(response);
           }
         });
+    }
+    else {
+      let response = {
+        flag: false,
+        msg: "Cannot get IP address and port number."
+      };
+      return res.send(response);
     } 
 });
 
