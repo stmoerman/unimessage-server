@@ -1,6 +1,10 @@
 var express = require('express');
 var router = express.Router();
 var User = require('../models/user');
+var bcrypt = require('bcrypt');
+const jwtsign = require('../util/JWT').sign;
+const jwtverify = require('../util/JWT').verify;
+const jwtdecode = require('../util/JWT').decode;
 
 
 // GET route for reading data
@@ -21,6 +25,7 @@ router.post('/register', function (req, res, next) {
     return res.send(response);
   }
 
+  // all fields have no empty values.
   if (req.body.email &&
     req.body.username &&
     req.body.password &&
@@ -28,12 +33,16 @@ router.post('/register', function (req, res, next) {
     req.body.ip &&
     req.body.port) {
 
+    var token= jwtsign({ email: req.body.email, fullName: req.body.username});    
+    hash_password = bcrypt.hashSync(req.body.password, 10);
+
     var userData = {
       email: req.body.email,
       username: req.body.username,
-      password: req.body.password,
+      password: hash_password,
       ip: req.body.ip,
       port: req.body.port,
+      id_token: token
     }
 
     User.create(userData, function (error, user) {
@@ -46,7 +55,10 @@ router.post('/register', function (req, res, next) {
       } else {
         let response = {
             flag: true,
-            msg: "Register Successfully"
+            msg: "Register Successfully",
+            data: {
+              id_token: token, 
+            }
         };
         return res.send(response);
       }
@@ -72,10 +84,16 @@ router.post('/login', function (req, res, next) {
             };
             return res.send(response);
           } else {
-            req.session.userId = user._id;
+            var token= jwtsign({ email: user.email, fullName: user.username, _id: user._id});
+            user.id_token = token;
+            user.save();
+            
             let response = {
                 flag: true,
-                msg: "login successfully"
+                msg: "login successfully",
+                data: {
+                  id_token: token, 
+                }
             };
             return res.send(response);
           }
@@ -90,50 +108,36 @@ router.post('/login', function (req, res, next) {
     } 
 });
 
-// GET Router for login using sessions
-router.get('/login', function (req, res, next) {
-  User.findById(req.session.userId)
-  .exec(function (error, user) {
-    if (error) {
+// JWT verification for logout 
+router.post('/logout', function (req, res, next) {
+  if(req.headers.authorization) {
+    User.findOne({ id_token: req.headers.authorization })
+    .exec(function (err, user) {
+      if(err || !user) {
+        let response = {
+          flag: true,
+          msg: "Missing token."
+        };
+        return res.send(response);
+      }
+      else {
+        user.id_token = "no";
+        user.save();
+
+        let response = {
+          flag: true,
+          msg: "Logout successfully."
+        };
+        return res.send(response);
+      }
+    })
+  }
+  else {
       let response = {
-          flag: false,
-          msg: "Please input your username and password to login."
+        flag: false,
+        msg: "Invalid headers."
       };
       return res.send(response);
-    } else {
-      if (user === null) {
-        let response = {
-          flag: false,
-          msg: "Please input your username and password to login."
-        };
-        return res.send(response);
-
-      } else {
-        let response = {
-            flag: true,
-            msg: "login successfully by sessions"
-        };
-        return res.send(response);            
-      }
-    }
-  });
-});
-
-// GET Router for logout 
-router.get('/logout', function (req, res, next) {
-  if (req.session) {
-    // delete session object
-    req.session.destroy(function (err) {
-      if (err) {
-        return next(err);
-      } else {
-        let response = {
-            flag: true,
-            msg: "logout successful",
-        };
-        return res.send(response);
-      }
-    });
   }
 });
 

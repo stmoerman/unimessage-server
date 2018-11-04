@@ -26,6 +26,10 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  id_token: {
+    type: String,
+    required: true,
+  },
 });
 
 //authenticate input against database
@@ -46,8 +50,6 @@ UserSchema.statics.authenticate = function (email, password, ip, port, callback)
           // User.updateOne(myQuery, newValues, );
           user.ip = ip;
           user.port = port;
-          user.password = password;
-          user.save();
           return callback(null, user);
         } else {
           return callback();
@@ -57,16 +59,16 @@ UserSchema.statics.authenticate = function (email, password, ip, port, callback)
 }
 
 //hashing a password before saving it to the database
-UserSchema.pre('save', function (next) {
-  var user = this;
-  bcrypt.hash(user.password, 10, function (err, hash) {
-    if (err) {
-      return next(err);
-    }
-    user.password = hash;
-    next();
-  })
-});
+// UserSchema.pre('save', function (next) {
+//   var user = this;
+//   bcrypt.hash(user.password, 10, function (err, hash) {
+//     if (err) {
+//       return next(err);
+//     }
+//     user.password = hash;
+//     next();
+//   })
+// });
 
 
 var User = mongoose.model('User', UserSchema);
