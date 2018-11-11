@@ -30,6 +30,17 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  friendship: {
+    friends: {
+      type: Array,
+    },
+    requests: {
+      type: Array,
+    },
+    blocks: {
+      type: Array,
+    }
+  }
 });
 
 //authenticate input against database
