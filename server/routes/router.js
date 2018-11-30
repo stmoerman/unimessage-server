@@ -380,12 +380,11 @@ router.get('/friendship/online', auth.authChecker, function (req, res, next) {
     })
 });
 
-// manipulate users in the block list, unblock it.
-router.post('/key', auth.authChecker, function (req, res, next) {
+// update a user's public key.
+router.post('/updateKey', auth.authChecker, function (req, res, next) {
   User.findOne({ id_token: req.headers.authorization })
     .exec(function (err, user) {
-      console.log("[test]", req.body.pubkey);
-
+      // console.log("[test]", req.body.pubkey);
       user.key = req.body.pubkey;
       user.save();
       console.log("save key...");
@@ -393,6 +392,19 @@ router.post('/key', auth.authChecker, function (req, res, next) {
         flag: true,
         msg: "save the public key successfully."
       };
+      return res.send(response);
+    })
+});
+
+// get a user's public key.
+router.post('/key', auth.authChecker, function (req, res, next) {
+  User.findOne({ _id: db.ObjectId(req.body.dst_id) })
+    .exec(function (err, user) {
+      let response = {
+        flag: true,
+        msg: user.key
+      };
+      // console.log(response);
       return res.send(response);
     })
 });
