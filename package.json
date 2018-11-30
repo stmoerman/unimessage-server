@@ -18,7 +18,9 @@
     "jsonwebtoken": "^8.3.0",
     "mongoose": "^5.3.9",
     "nodemon": "^1.18.5",
-    "socket.io": "^2.1.1"
+    "peer": "^0.2.10",
+    "socket.io": "^2.1.1",
+    "socket.io-p2p-server": "^1.2.0"
   },
   "author": "",
   "license": "ISC"

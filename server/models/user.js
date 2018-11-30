@@ -40,6 +40,9 @@ var UserSchema = new mongoose.Schema({
     blocks: {
       type: Array,
     }
+  },
+  key: {
+    type: String,
   }
 });
 

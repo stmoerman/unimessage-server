@@ -251,7 +251,7 @@ router.post('/friendship/confirm', auth.authChecker, function (req, res, next) {
         user.save();
         // dst
         let temp_user = await User.findOne({ _id: db.ObjectId(req.body.dst_id) });
-        console.log(temp_user);
+        // console.log(temp_user);
         temp_user.friendship.friends.push(req.body.src_id);
         temp_user.save();
       }
@@ -311,7 +311,7 @@ router.post('/friendship/unfriend', auth.authChecker, function (req, res, next) 
 
         // dst
         let temp_user = await User.findOne({ _id: db.ObjectId(req.body.dst_id) });
-        console.log(temp_user);
+        // console.log(temp_user);
         let pos2 = temp_user.friendship.friends.indexOf(req.body.src_id);
         temp_user.friendship.friends.splice(pos2, 1);
         temp_user.save();
@@ -338,6 +338,60 @@ router.post('/friendship/unblock', auth.authChecker, function (req, res, next) {
       let response = {
         flag: true,
         msg: "unblock this person successfully."
+      };
+      return res.send(response);
+    })
+});
+
+// return online friends
+router.get('/friendship/online', auth.authChecker, function (req, res, next) {
+  User.findOne({ id_token: req.headers.authorization })
+    .exec(async function (err, user) {
+      var online_friends_list = new Array();
+      // user.friendship.friends.forEach(function(item) {
+      //   // console.log(item);
+      //   let user = User.find({ _id: db.ObjectId(item) });
+      //   friends_list.push({"dst_id":item, "dst_username": user.username});
+      // });
+      for (let i = 0; i < user.friendship.friends.length; i++) {
+        let item = user.friendship.friends[i];
+        let temp_user = await User.findOne({ _id: db.ObjectId(item) });
+        // console.log(temp_user);
+        if(temp_user.id_token != "no") {
+          online_friends_list.push({ "dst_id": item, "dst_username": temp_user.username });
+        }
+      }
+      
+      // user.friendship.blocks.forEach(function(item) {
+      //   // console.log(item);
+      //   let user = User.find({ _id: db.ObjectId(item) });
+      //   blocks_list.push({"dst_id":item, "dst_username": user.username});
+      // });
+
+      // console.log(friends_list);
+      // console.log(requests_list);
+      // console.log(blocks_list);
+
+      let response = {
+        flag: true,
+        onlineFriends: online_friends_list,
+      };
+      return res.send(response);
+    })
+});
+
+// manipulate users in the block list, unblock it.
+router.post('/key', auth.authChecker, function (req, res, next) {
+  User.findOne({ id_token: req.headers.authorization })
+    .exec(function (err, user) {
+      console.log("[test]", req.body.pubkey);
+
+      user.key = req.body.pubkey;
+      user.save();
+      console.log("save key...");
+      let response = {
+        flag: true,
+        msg: "save the public key successfully."
       };
       return res.send(response);
     })
